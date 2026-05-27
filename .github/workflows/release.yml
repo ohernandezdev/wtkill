@@ -1,0 +1,66 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build ${{ matrix.target.name }}
+    runs-on: ${{ matrix.target.os }}
+    strategy:
+      matrix:
+        target:
+          - { name: darwin-arm64, os: macos-14,    goos: darwin, goarch: arm64 }
+          - { name: darwin-amd64, os: macos-13,    goos: darwin, goarch: amd64 }
+          - { name: linux-amd64,  os: ubuntu-24.04, goos: linux,  goarch: amd64 }
+          - { name: linux-arm64,  os: ubuntu-24.04, goos: linux,  goarch: arm64 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: build
+        env:
+          GOOS: ${{ matrix.target.goos }}
+          GOARCH: ${{ matrix.target.goarch }}
+          CGO_ENABLED: '0'
+        run: |
+          mkdir -p dist
+          go build -trimpath -ldflags="-s -w" -o dist/wtkill .
+          cd dist
+          tar -czf wtkill-${{ github.ref_name }}-${{ matrix.target.name }}.tar.gz wtkill
+          shasum -a 256 wtkill-${{ github.ref_name }}-${{ matrix.target.name }}.tar.gz > wtkill-${{ github.ref_name }}-${{ matrix.target.name }}.tar.gz.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wtkill-${{ matrix.target.name }}
+          path: |
+            dist/wtkill-${{ github.ref_name }}-${{ matrix.target.name }}.tar.gz
+            dist/wtkill-${{ github.ref_name }}-${{ matrix.target.name }}.tar.gz.sha256
+
+  release:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "wtkill ${GITHUB_REF_NAME}" \
+            --generate-notes \
+            dist/*.tar.gz dist/*.sha256

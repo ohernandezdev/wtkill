@@ -1,0 +1,18 @@
+# build artifacts
+/wtkill
+/dist/
+/build/
+
+# os
+.DS_Store
+Thumbs.db
+
+# editors
+.idea/
+.vscode/
+*.swp
+
+# go
+*.test
+*.out
+vendor/

@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - run: go fmt ./...
+      - name: check no formatting changes
+        run: git diff --exit-code
+
+      - run: go vet ./...
+      - run: go build -o wtkill .
+
+      - name: smoke test — list JSON
+        run: |
+          mkdir -p /tmp/wtkill-smoke
+          ./wtkill list --json --path /tmp/wtkill-smoke --depth 1
+
+      - name: smoke test — clean without filters must refuse
+        run: |
+          set +e
+          ./wtkill clean --path /tmp 2>&1
+          code=$?
+          set -e
+          if [ "$code" != "2" ]; then
+            echo "expected exit 2, got $code"
+            exit 1
+          fi
