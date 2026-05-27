@@ -38,9 +38,21 @@ go build -o wtkill .
 mv wtkill ~/.local/bin/   # or anywhere on $PATH
 ```
 
-### Homebrew / prebuilt binaries
+### Homebrew (macOS Apple Silicon / Linux)
 
-Coming soon. Until then, build from source.
+```bash
+brew install ohernandezdev/tap/wtkill
+```
+
+### Prebuilt binaries
+
+Tarballs for `darwin-arm64`, `linux-amd64`, `linux-arm64` are on the [releases page](https://github.com/ohernandezdev/wtkill/releases/latest).
+
+```bash
+# example: macOS Apple Silicon
+curl -L https://github.com/ohernandezdev/wtkill/releases/latest/download/wtkill-v0.3.0-darwin-arm64.tar.gz | tar xz
+mv wtkill ~/.local/bin/   # or anywhere on PATH
+```
 
 ## Usage
 
