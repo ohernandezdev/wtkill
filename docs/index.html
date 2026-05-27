@@ -129,7 +129,13 @@
     padding: 20px;
   }
   .card p { margin: 0; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
-  .card .ico { font-size: 22px; margin-bottom: 8px; }
+  .card .ico {
+    width: 26px; height: 26px;
+    color: var(--brand);
+    margin-bottom: 10px;
+    display: block;
+    stroke-width: 1.75;
+  }
 
   pre {
     background: var(--code-bg);
@@ -224,32 +230,32 @@
     <h2>Features</h2>
     <div class="grid">
       <div class="card">
-        <div class="ico">📂</div>
+        <i data-lucide="folder-search" class="ico"></i>
         <h3>Recursive scan</h3>
         <p>Walk any directory looking for git repos. 8 worktrees enriched concurrently via goroutines. Results stream into the UI live.</p>
       </div>
       <div class="card">
-        <div class="ico">🔗</div>
+        <i data-lucide="git-merge" class="ico"></i>
         <h3>Symlink-aware dedupe</h3>
         <p>Repos that share a <code>.git</code> via symlink only show their worktrees once. No phantom duplicates.</p>
       </div>
       <div class="card">
-        <div class="ico">🎨</div>
+        <i data-lucide="terminal-square" class="ico"></i>
         <h3>Charmbracelet TUI</h3>
         <p>Bubble Tea + Lip Gloss. Spinner, age-coloured rows, prunable/missing/failed badges, in-place delete with status feedback.</p>
       </div>
       <div class="card">
-        <div class="ico">🤖</div>
+        <i data-lucide="bot" class="ico"></i>
         <h3>AI-agent friendly</h3>
         <p>Off-TTY output is JSON by default. <code>list</code>, <code>rm</code>, <code>clean</code> subcommands with structured results and proper exit codes.</p>
       </div>
       <div class="card">
-        <div class="ico">🛡️</div>
+        <i data-lucide="shield-check" class="ico"></i>
         <h3>Safe by default</h3>
         <p><code>clean</code> without filters refuses to run. <code>--dry-run</code> previews. <code>--force</code> is opt-in.</p>
       </div>
       <div class="card">
-        <div class="ico">📦</div>
+        <i data-lucide="package-2" class="ico"></i>
         <h3>Single binary</h3>
         <p>~5 MB, no runtime, no dependencies. <code>darwin-arm64</code>, <code>linux-amd64</code>, <code>linux-arm64</code> prebuilt. Build from source for the rest.</p>
       </div>
@@ -317,5 +323,7 @@ wtkill rm /path/to/worktree --force --json</pre>
   </div>
 </footer>
 
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>
