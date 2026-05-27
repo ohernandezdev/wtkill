@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>wtkill — find and clean stale git worktrees</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Find and clean stale git worktree entries across all your repos. Interactive TUI for humans, JSON for AI agents. Single static binary, MIT licensed." />
+<meta property="og:title" content="wtkill — git worktree cleaner" />
+<meta property="og:description" content="The npkill of git worktrees. TUI + JSON CLI. Built in Go with Bubble Tea." />
+<meta property="og:image" content="https://raw.githubusercontent.com/ohernandezdev/wtkill/main/docs/demo.gif" />
+<meta property="og:url" content="https://ohernandezdev.github.io/wtkill/" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAACklEQVR42mNkAAAABgADNjd8qAAAAABJRU5ErkJggg==" />
+<style>
+  :root {
+    --bg: #0d0e14;
+    --panel: #14161e;
+    --border: #23262f;
+    --fg: #e8eaf0;
+    --muted: #8b8fa3;
+    --dim: #5a5e72;
+    --brand: #7c5cff;
+    --accent: #ff8a4c;
+    --ok: #5fd068;
+    --warn: #ffc857;
+    --err: #ff5c5c;
+    --code-bg: #0a0b10;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--brand); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  .container { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+  header {
+    padding: 64px 0 32px;
+    text-align: center;
+    background: radial-gradient(ellipse at top, rgba(124,92,255,0.12), transparent 60%);
+  }
+  .logo {
+    display: inline-block;
+    padding: 6px 14px;
+    border: 1px solid var(--brand);
+    border-radius: 12px;
+    color: var(--brand);
+    font-weight: 700;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: clamp(36px, 6vw, 56px);
+    line-height: 1.1;
+    margin: 8px 0 16px;
+    letter-spacing: -0.02em;
+  }
+  .tagline {
+    font-size: clamp(16px, 2vw, 20px);
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0 auto 28px;
+  }
+  .ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    border: 1px solid transparent;
+    transition: transform .12s ease, background .12s ease;
+  }
+  .btn:hover { transform: translateY(-1px); text-decoration: none; }
+  .btn-primary { background: var(--brand); color: white; }
+  .btn-primary:hover { background: #8a6dff; }
+  .btn-ghost { background: transparent; color: var(--fg); border-color: var(--border); }
+  .btn-ghost:hover { background: var(--panel); border-color: var(--muted); }
+
+  .install {
+    margin-top: 36px;
+    display: inline-block;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    text-align: left;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 13.5px;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .install .prompt { color: var(--dim); user-select: none; }
+
+  .demo {
+    margin: 32px auto 0;
+    max-width: 1100px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  .demo img { display: block; width: 100%; height: auto; }
+
+  section { padding: 56px 0; }
+  h2 {
+    font-size: clamp(24px, 3.5vw, 32px);
+    letter-spacing: -0.01em;
+    margin: 0 0 24px;
+  }
+  h3 { font-size: 18px; margin: 0 0 8px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card p { margin: 0; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+  .card .ico { font-size: 22px; margin-bottom: 8px; }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-size: 13px;
+    color: var(--fg);
+  }
+  pre .c { color: var(--dim); }
+  pre .k { color: var(--brand); }
+  pre .s { color: var(--ok); }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+
+  footer {
+    padding: 48px 0 64px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+  }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--fg); }
+
+  .badge {
+    display: inline-block;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: "JetBrains Mono", monospace;
+    margin: 0 4px 8px 0;
+  }
+  .badge .ok { color: var(--ok); }
+  .badge .warn { color: var(--warn); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="logo">✦ wtkill</div>
+    <h1>The <span style="color: var(--brand)">npkill</span> of git worktrees</h1>
+    <p class="tagline">
+      Find and clean stale <code>git worktree</code> entries across all your repos.
+      Interactive TUI for humans. JSON output for AI agents. Single static binary, ~5&nbsp;MB, MIT licensed.
+    </p>
+    <div class="ctas">
+      <a class="btn btn-primary" href="https://github.com/ohernandezdev/wtkill">GitHub →</a>
+      <a class="btn btn-ghost" href="https://github.com/ohernandezdev/wtkill/releases/latest">Download v0.3.0</a>
+    </div>
+    <div class="install">
+      <span class="prompt">$ </span>curl -L https://github.com/ohernandezdev/wtkill/releases/latest/download/wtkill-v0.3.0-darwin-arm64.tar.gz | tar xz
+    </div>
+
+    <div class="demo">
+      <img src="./demo.gif" alt="wtkill demo" />
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+    <h2>Why</h2>
+    <p style="color: var(--muted); max-width: 720px;">
+      Worktrees are great until you forget them. Six months in you have 60&nbsp;GB of branches you'll never touch
+      again, scattered across <code>.worktrees/</code>, <code>.claude/worktrees/</code>, and one-offs you made on a Tuesday.
+      <code>git worktree list</code> only shows them per-repo. <code>du</code> on <code>~/Projects</code> lies to you because
+      of symlinks.
+    </p>
+    <p style="color: var(--muted); max-width: 720px;">
+      <strong style="color: var(--fg)">wtkill</strong> walks your projects directory, runs
+      <code>git worktree list --porcelain</code> on every repo it finds, enriches each entry with
+      <code>du&nbsp;-sk</code> and <code>git&nbsp;log&nbsp;-1</code>, and renders the whole picture sorted by what's eating
+      the most disk.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Features</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="ico">📂</div>
+        <h3>Recursive scan</h3>
+        <p>Walk any directory looking for git repos. 8 worktrees enriched concurrently via goroutines. Results stream into the UI live.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🔗</div>
+        <h3>Symlink-aware dedupe</h3>
+        <p>Repos that share a <code>.git</code> via symlink only show their worktrees once. No phantom duplicates.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🎨</div>
+        <h3>Charmbracelet TUI</h3>
+        <p>Bubble Tea + Lip Gloss. Spinner, age-coloured rows, prunable/missing/failed badges, in-place delete with status feedback.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🤖</div>
+        <h3>AI-agent friendly</h3>
+        <p>Off-TTY output is JSON by default. <code>list</code>, <code>rm</code>, <code>clean</code> subcommands with structured results and proper exit codes.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🛡️</div>
+        <h3>Safe by default</h3>
+        <p><code>clean</code> without filters refuses to run. <code>--dry-run</code> previews. <code>--force</code> is opt-in.</p>
+      </div>
+      <div class="card">
+        <div class="ico">📦</div>
+        <h3>Single binary</h3>
+        <p>~5 MB, no runtime, no dependencies. <code>darwin-arm64</code>, <code>linux-amd64</code>, <code>linux-arm64</code> prebuilt. Build from source for the rest.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>How to use it</h2>
+
+    <h3 style="margin-top: 24px; color: var(--muted); font-weight: 500; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">As a human</h3>
+<pre><span class="c"># open the TUI on your projects directory</span>
+wtkill
+
+<span class="c"># or scan somewhere else, deeper</span>
+wtkill --path ~/code --depth 6</pre>
+
+    <p style="color: var(--muted); margin-top: 8px;">
+      Arrow keys to navigate, <code>space</code> to delete, <code>f</code> to toggle <code>--force</code>,
+      <code>r</code> to rescan, <code>q</code> to quit.
+    </p>
+
+    <h3 style="margin-top: 32px; color: var(--muted); font-weight: 500; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">As an AI agent or script</h3>
+<pre><span class="c"># JSON list of every worktree (auto-JSON off-TTY)</span>
+wtkill list --json
+
+<span class="c"># Bulk-clean: preview what 60-day-old branches would be removed</span>
+wtkill clean --older-than 60d --dry-run
+
+<span class="c"># Filter by branch name regex + size</span>
+wtkill list --branch '^claude/' --min-size 100MB
+
+<span class="c"># Remove specific paths</span>
+wtkill rm /path/to/worktree --force --json</pre>
+
+    <p style="color: var(--muted); margin-top: 8px;">
+      Exit codes: <span class="badge"><span class="ok">0</span>&nbsp;success</span>
+      <span class="badge"><span class="warn">1</span>&nbsp;partial fail</span>
+      <span class="badge"><span class="err" style="color: var(--err)">2</span>&nbsp;bad usage</span>
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>What it is not</h2>
+    <ul style="color: var(--muted); line-height: 1.9; padding-left: 20px;">
+      <li>It does not delete branches, tags, or remotes — only worktree entries.</li>
+      <li>It does not touch your main worktree unless you pass <code>--include-main</code>.</li>
+      <li>It is not a replacement for <a href="https://npkill.js.org/">npkill</a>. npkill is for <code>node_modules</code>. This is for git worktrees. Different scope.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>
+      Built by <a href="https://github.com/ohernandezdev">@ohernandezdev</a> ·
+      <a href="https://github.com/ohernandezdev/wtkill/blob/main/LICENSE">MIT</a> ·
+      Powered by <a href="https://github.com/charmbracelet/bubbletea">Bubble Tea</a> +
+      <a href="https://github.com/charmbracelet/lipgloss">Lip Gloss</a> ·
+      Inspired by <a href="https://npkill.js.org/">npkill</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
