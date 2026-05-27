@@ -2,11 +2,7 @@
 
 > Find and clean stale `git worktree` entries across all your repos — interactive TUI for humans, JSON output for AI agents and scripts.
 
-```
-  ╭──────────╮
-  │ ✦ wtkill │
-  ╰──────────╯  git worktree cleaner
-```
+![wtkill screenshot — 20 worktrees, 12 GB total, mid-cleanup](./docs/screenshot.png)
 
 `wtkill` is the [`npkill`](https://npkill.js.org/) of git worktrees. Point it at a directory full of repos, it shows you every worktree across all of them with size and age, and you delete the stale ones with one keystroke.
 
